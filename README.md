@@ -1,42 +1,511 @@
-# Bella Vista Bot
+# 🇮🇹 Bella Vista Bot — Telegram-бот для итальянского кафе
 
-Telegram-бот для итальянского кафе "Bella Vista" на aiogram 3.
+> Бот на **aiogram 3** для приёма заказов, показа меню и контактной информации кафе Bella Vista.
 
-## Возможности
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python) ![aiogram](https://img.shields.io/badge/aiogram-3.13-green) ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
-- Приветственное сообщение с описанием кафе
-- Главное меню: 🍕 Меню, 📍 Адрес и часы, 📞 Контакты, 🛒 Сделать заказ
-- Меню по категориям: Завтраки, Пицца, Напитки, Десерты
-- Оформление заказа: бот собирает имя и телефон, отправляет заявку администратору
-- Кнопка "Назад" на всех экранах
+**Стек:** Python 3.10+ · aiogram 3 · python-dotenv  
+**Версия:** 1.0.0 · **Клиент:** Кафе Bella Vista
 
-## Установка
+---
 
-```bash
+## 📋 Содержание
+
+1. [Возможности](#-возможности)
+2. [Запуск на Windows — пошагово с нуля](#-запуск-на-windows--пошагово-с-нуля)
+3. [Быстрый старт macOS / Linux](#-быстрый-старт-macos--linux)
+4. [Развёртывание на сервере](#-развёртывание-на-сервере-production)
+5. [Конфигурация](#-конфигурация)
+6. [Структура проекта](#-структура-проекта)
+7. [Схема базы данных](#-схема-базы-данных)
+8. [Сценарии использования](#-сценарии-использования)
+9. [Настройка контента](#-настройка-контента)
+10. [Обновление и обслуживание](#-обновление-и-обслуживание)
+11. [Частые проблемы](#-частые-проблемы)
+12. [Лицензия](#-лицензия)
+
+---
+
+## ✅ Возможности
+
+### Для пользователей
+- [x] Приветственное сообщение с описанием кафе
+- [x] Главное меню с inline-кнопками
+- [x] Просмотр меню по категориям (Завтраки, Пицца, Напитки, Десерты)
+- [x] Адрес и часы работы
+- [x] Контактная информация
+- [x] Оформление заказа — ввод имени и номера телефона
+- [x] Отправка номера телефона через кнопку «Поделиться контактом»
+- [x] Кнопка «Назад» на каждом экране
+
+### Для администраторов
+- [x] Мгновенное уведомление о новом заказе в Telegram
+- [x] Уведомление содержит имя, телефон и username клиента
+- [x] Простая настройка через `.env` без правки кода
+- [x] Лёгкая замена пунктов меню и цен в `menu_data.py`
+- [x] Запуск как системная служба (systemd / bat-файл)
+
+---
+
+## 🖥 Запуск на Windows — пошагово с нуля
+
+> Этот раздел предназначен для нетехнических пользователей.  
+> Следуйте каждому шагу по порядку.
+
+---
+
+### Шаг 1 — Создать бота в @BotFather
+
+1. Откройте Telegram и найдите бота **@BotFather**.
+2. Напишите `/newbot`.
+3. Придумайте **имя** бота (например: `Bella Vista`).
+4. Придумайте **username** (должен заканчиваться на `bot`, например: `bella_vista_cafe_bot`).
+5. BotFather пришлёт **токен** вида `7123456789:AAFxxxxxx...` — сохраните его, он понадобится на шаге 8.
+
+---
+
+### Шаг 2 — Узнать свой Telegram ID (для уведомлений администратора)
+
+1. Найдите бота **@userinfobot** в Telegram.
+2. Напишите ему `/start`.
+3. Он пришлёт ваш **ID** — число вида `123456789`.
+4. Сохраните это число — оно понадобится на шаге 8.
+
+---
+
+### Шаг 3 — Установить Python
+
+1. Перейдите на сайт [python.org/downloads](https://www.python.org/downloads/) и скачайте последнюю версию Python 3.
+2. Запустите установщик.
+3. ⚠️ **Обязательно** поставьте галочку **«Add Python to PATH»** в самом низу первого экрана.
+4. Нажмите **Install Now** и дождитесь окончания установки.
+5. Проверьте установку: откройте **Пуск → cmd** и введите:
+   ```
+   python --version
+   ```
+   Должно вывести `Python 3.x.x`.
+
+---
+
+### Шаг 4 — Скачать код проекта
+
+**Вариант A — через ZIP (проще):**
+1. На этой странице нажмите зелёную кнопку **Code → Download ZIP**.
+2. Распакуйте архив в удобное место, например `C:\bots\bella_vista_bot`.
+
+**Вариант B — через Git:**
+```cmd
+git clone https://github.com/mo2est/Bella_vista_bot.git
+```
+
+---
+
+### Шаг 5 — Открыть папку в командной строке
+
+**Быстрый способ:**
+1. Откройте папку с ботом в Проводнике.
+2. Кликните на **адресную строку** (строка с путём вверху окна) — она выделится синим.
+3. Введите `cmd` и нажмите **Enter**.
+4. Откроется командная строка уже в нужной папке ✅
+
+---
+
+### Шаг 6 — Создать виртуальное окружение
+
+В командной строке введите:
+```cmd
+python -m venv venv
+venv\Scripts\activate
+```
+
+Перед строкой ввода должно появиться `(venv)` — это значит, что окружение активно.
+
+> **Ошибка в PowerShell:** `cannot be loaded because running scripts is disabled`  
+> Выполните в PowerShell от имени администратора:
+> ```powershell
+> Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+> ```
+> Затем снова запустите `venv\Scripts\activate`.
+
+---
+
+### Шаг 7 — Установить зависимости
+
+```cmd
 pip install -r requirements.txt
-cp .env.example .env
 ```
 
-Заполните `.env`:
+Дождитесь окончания загрузки (несколько секунд).
 
+---
+
+### Шаг 8 — Создать файл .env
+
+1. В папке с ботом найдите файл `.env.example`.
+2. Скопируйте его и переименуйте копию в `.env` (точка в начале обязательна).
+3. Откройте `.env` блокнотом и заполните:
+
+```env
+BOT_TOKEN=вставьте_токен_из_шага_1
+ADMIN_CHAT_ID=вставьте_ваш_id_из_шага_2
 ```
-BOT_TOKEN=токен_от_BotFather
-ADMIN_CHAT_ID=chat_id_администратора
-```
 
-## Запуск
+4. Сохраните файл.
 
-```bash
+---
+
+### Шаг 9 — Запустить бота
+
+```cmd
 python main.py
 ```
 
-## Структура проекта
+Если в консоли появилось сообщение о старте polling — бот работает ✅  
+Откройте Telegram и напишите боту `/start`.
+
+---
+
+### Шаг 10 — Постоянная работа бота
+
+**Вариант A — bat-файл с автозагрузкой (для домашнего ПК):**
+
+1. Создайте файл `start_bot.bat` в папке с ботом:
+   ```bat
+   @echo off
+   cd /d C:\bots\bella_vista_bot
+   call venv\Scripts\activate
+   python main.py
+   ```
+2. Нажмите **Win + R**, введите `shell:startup` → Enter.
+3. Скопируйте `start_bot.bat` в открывшуюся папку.
+
+Теперь бот будет автоматически запускаться при включении компьютера.
+
+**Вариант B — VPS-сервер (рекомендуется для продакшена):**  
+Смотрите раздел [Развёртывание на сервере](#-развёртывание-на-сервере-production).
+
+---
+
+### 🔴 Таблица ошибок Windows
+
+| Ошибка | Причина | Решение |
+|--------|---------|---------|
+| `python не является... командой` | Python не добавлен в PATH | Переустановите Python, поставив галочку «Add to PATH» |
+| `No module named aiogram` | Зависимости не установлены | Убедитесь, что активировано venv, и запустите `pip install -r requirements.txt` |
+| `Unauthorized` / `401` | Неверный токен в `.env` | Проверьте токен — скопируйте заново из @BotFather |
+| `cannot be loaded... scripts is disabled` | Ограничение PowerShell | Используйте **cmd** вместо PowerShell, или выполните `Set-ExecutionPolicy RemoteSigned` |
+| Бот не отвечает после запуска | Файл `.env` не найден или пустой | Убедитесь, что файл называется именно `.env` (не `.env.txt`) |
+
+---
+
+## 🚀 Быстрый старт macOS / Linux
+
+```bash
+git clone https://github.com/mo2est/Bella_vista_bot.git
+cd Bella_vista_bot
+python3 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env && nano .env   # заполните BOT_TOKEN и ADMIN_CHAT_ID
+python main.py
+```
+
+---
+
+## 🖧 Развёртывание на сервере (production)
+
+### Требования к серверу
+
+| Параметр | Минимум | Рекомендуется |
+|----------|---------|---------------|
+| ОС | Ubuntu 20.04+ | Ubuntu 22.04 LTS |
+| RAM | 256 МБ | 512 МБ |
+| CPU | 1 ядро | 1 ядро |
+| Диск | 1 ГБ | 5 ГБ |
+| Python | 3.10 | 3.11+ |
+
+### Шаги установки
+
+```bash
+# 1. Обновить систему и установить Python
+sudo apt update && sudo apt install -y python3 python3-venv python3-pip git
+
+# 2. Создать системного пользователя для бота
+sudo useradd -m -s /bin/bash botuser
+
+# 3. Клонировать репозиторий
+sudo -u botuser git clone https://github.com/mo2est/Bella_vista_bot.git /home/botuser/bella_vista_bot
+cd /home/botuser/bella_vista_bot
+
+# 4. Настроить окружение
+sudo -u botuser python3 -m venv venv
+sudo -u botuser venv/bin/pip install -r requirements.txt
+sudo -u botuser cp .env.example .env
+sudo -u botuser nano .env  # заполните BOT_TOKEN и ADMIN_CHAT_ID
+
+# 5. Создать systemd-службу
+sudo tee /etc/systemd/system/bella-vista-bot.service > /dev/null <<EOF
+[Unit]
+Description=Bella Vista Telegram Bot
+After=network.target
+
+[Service]
+User=botuser
+WorkingDirectory=/home/botuser/bella_vista_bot
+ExecStart=/home/botuser/bella_vista_bot/venv/bin/python main.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable bella-vista-bot
+sudo systemctl start bella-vista-bot
+
+# 6. Проверить логи
+sudo journalctl -u bella-vista-bot -f
+```
+
+### Альтернатива: Docker
+
+**Dockerfile:**
+```dockerfile
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+CMD ["python", "main.py"]
+```
+
+**docker-compose.yml:**
+```yaml
+version: "3.9"
+services:
+  bot:
+    build: .
+    restart: always
+    env_file:
+      - .env
+```
+
+```bash
+docker compose up -d
+docker compose logs -f
+```
+
+---
+
+## ⚙️ Конфигурация
+
+Все настройки хранятся в файле `.env` в корне проекта.
+
+| Переменная | Описание | Обязательно | По умолчанию |
+|------------|----------|:-----------:|:------------:|
+| `BOT_TOKEN` | Токен бота от @BotFather | ✅ | — |
+| `ADMIN_CHAT_ID` | Telegram ID администратора для получения заказов | ✅ | — |
+
+---
+
+## 📁 Структура проекта
 
 ```
-main.py              # точка входа
-config.py            # загрузка переменных окружения
-menu_data.py          # данные меню (категории, блюда, цены)
-keyboards/keyboards.py # инлайн-клавиатуры
-handlers/common.py    # старт, меню, адрес, контакты
-handlers/order.py      # сбор заказа (FSM: имя -> телефон)
+Bella_vista_bot/
+│
+├── main.py                  # Точка входа: инициализация бота и запуск polling
+├── config.py                # Загрузка переменных окружения из .env
+├── menu_data.py             # Данные меню: категории, блюда, цены
+│
+├── handlers/
+│   ├── __init__.py
+│   ├── common.py            # /start, меню, адрес, контакты, категории
+│   └── order.py             # FSM-сценарий оформления заказа
+│
+├── keyboards/
+│   ├── __init__.py
+│   └── keyboards.py         # Все inline- и reply-клавиатуры
+│
+├── .env                     # Секреты (не в git)
+├── .env.example             # Шаблон переменных окружения
+├── .gitignore
+├── requirements.txt
+└── README.md
 ```
+
+---
+
+## 🗄 Схема базы данных
+
+> В текущей версии бот не использует постоянную базу данных.  
+> Состояние FSM хранится в оперативной памяти (`MemoryStorage`).  
+> При перезапуске незавершённые заказы сбрасываются.
+
+**Поток данных заказа:**
+
+```
+Пользователь
+    │
+    ├─ [имя]     ──→  FSMContext (RAM)
+    ├─ [телефон] ──→  FSMContext (RAM)
+    │
+    └─ finish_order()
+            │
+            ├─→  Сообщение администратору (ADMIN_CHAT_ID)
+            └─→  Очистка состояния FSM
+```
+
+> **Для хранения заказов** подключите SQLite или PostgreSQL —  
+> обратитесь к разработчику за расширенной версией.
+
+---
+
+## 🗺 Сценарии использования
+
+### Пользовательский путь
+
+```
+/start
+  └── Главное меню
+        ├── 🍕 Меню
+        │     ├── 🥐 Завтраки  → список блюд → ⬅️ Назад
+        │     ├── 🍕 Пицца     → список блюд → ⬅️ Назад
+        │     ├── 🥤 Напитки   → список блюд → ⬅️ Назад
+        │     ├── 🍰 Десерты   → список блюд → ⬅️ Назад
+        │     └── ⬅️ Назад
+        │
+        ├── 📍 Адрес и часы  → информация → ⬅️ Назад
+        ├── 📞 Контакты      → информация → ⬅️ Назад
+        │
+        └── 🛒 Сделать заказ
+              │
+              ├── [FSM] Ввод имени
+              ├── [FSM] Ввод телефона (кнопка или текст)
+              └── ✅ Подтверждение + уведомление администратору
+```
+
+### Административный путь (FSM)
+
+```
+Состояния OrderStates:
+  waiting_name   ←─── callback "order"
+       │
+       ▼
+  waiting_phone  ←─── сообщение с именем
+       │
+       ├── F.contact → finish_order(phone_number)
+       └── F.text    → finish_order(text)
+                              │
+                              ├── bot.send_message(ADMIN_CHAT_ID)
+                              └── state.clear()
+```
+
+---
+
+## 🎨 Настройка контента
+
+### Изменение меню
+
+Откройте файл `menu_data.py` и отредактируйте нужные категории:
+
+```python
+"pizza": {
+    "title": "🍕 Пицца",
+    "items": [
+        ("Маргарита", "450 руб."),   # ← название и цена
+        ("Пепперони", "520 руб."),
+    ],
+},
+```
+
+- Добавьте новый пункт — добавьте строку в `items`.
+- Измените цену — исправьте строку цены.
+- Добавьте новую категорию — добавьте новый блок по образцу выше и добавьте кнопку в `menu_categories_kb()` в `keyboards.py`.
+
+После изменений **перезапустите бота**.
+
+### Изменение текстов
+
+Все тексты сообщений хранятся в `handlers/common.py` в переменных:
+
+```python
+WELCOME_TEXT  # приветствие
+ADDRESS_TEXT  # адрес и часы
+CONTACTS_TEXT # контакты
+```
+
+---
+
+## 🔧 Обновление и обслуживание
+
+### Обновление кода
+
+```bash
+cd /home/botuser/bella_vista_bot
+git pull origin main
+source venv/bin/activate
+pip install -r requirements.txt   # если изменились зависимости
+sudo systemctl restart bella-vista-bot
+```
+
+### Бэкап вручную
+
+```bash
+# Сохранить .env (главное для восстановления)
+cp .env ~/backup_bella_vista_bot.env
+```
+
+### Автоматический бэкап через cron
+
+```bash
+crontab -e
+# Добавить строку (бэкап каждый день в 3:00):
+0 3 * * * cp /home/botuser/bella_vista_bot/.env /home/botuser/backups/env_$(date +\%Y\%m\%d).env
+```
+
+### Таблица быстрых команд systemd
+
+| Действие | Команда |
+|----------|---------|
+| Запустить бота | `sudo systemctl start bella-vista-bot` |
+| Остановить бота | `sudo systemctl stop bella-vista-bot` |
+| Перезапустить бота | `sudo systemctl restart bella-vista-bot` |
+| Статус бота | `sudo systemctl status bella-vista-bot` |
+| Логи в реальном времени | `sudo journalctl -u bella-vista-bot -f` |
+| Логи за сегодня | `sudo journalctl -u bella-vista-bot --since today` |
+
+---
+
+## ❓ Частые проблемы
+
+| Симптом | Причина | Решение |
+|---------|---------|---------|
+| Бот не реагирует на `/start` | Неверный или просроченный токен | Получите новый токен у @BotFather командой `/token` |
+| Заказы не приходят администратору | Неверный `ADMIN_CHAT_ID` | Уточните ID через @userinfobot и обновите `.env` |
+| `Unauthorized` при запуске | Токен скопирован с пробелами | Проверьте `.env`, уберите пробелы вокруг `=` |
+| `ModuleNotFoundError` | Зависимости не установлены или venv не активен | Активируйте venv и запустите `pip install -r requirements.txt` |
+| Бот падает после ответа на заказ | Пользователь нажал «Назад» в середине FSM | Исправлено — `back_to_main` вызывает `state.clear()` |
+| Бот отвечает дважды | Запущено два экземпляра бота | Остановите все процессы: `pkill -f main.py` |
+| Кнопка «Поделиться телефоном» не появляется | Telegram Web — не поддерживает reply-клавиатуры | Используйте мобильное приложение Telegram |
+
+---
+
+## 📄 Лицензия
+
+MIT License. Свободно использовать, изменять и распространять с указанием авторства.
+
+---
+
+<details>
+<summary>✅ Чеклист перед сдачей клиенту</summary>
+
+- [ ] Токен бота создан в @BotFather и прописан в `.env`
+- [ ] `ADMIN_CHAT_ID` указан верно — проверено тестовым заказом
+- [ ] Весь контент меню заполнен: названия, цены, категории
+- [ ] Тест пользовательского пути: `/start` → меню → заказ → подтверждение
+- [ ] Бот запущен как служба (systemd или bat + автозагрузка) и работает после перезагрузки
+- [ ] Бэкап файла `.env` сделан и хранится в надёжном месте
+- [ ] Клиенту передана инструкция по запуску (раздел «Запуск на Windows»)
+- [ ] Клиент проверил получение уведомлений о заказах в Telegram
+
+</details>
