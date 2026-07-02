@@ -1,4 +1,4 @@
-from aiogram.types import InlineKeyboardButton
+from aiogram.types import InlineKeyboardButton, KeyboardButton, ReplyKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from menu_data import MENU
@@ -36,6 +36,8 @@ def cancel_order_kb():
 
 
 def contact_kb():
-    builder = InlineKeyboardBuilder()
-    builder.button(text="📱 Отправить номер телефона", request_contact=True)
-    return builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text="📱 Отправить номер телефона", request_contact=True)]],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+    )
