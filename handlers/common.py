@@ -3,7 +3,8 @@ from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from keyboards.keyboards import back_kb, main_menu_kb, menu_categories_kb
+from cart import cart_count, get_cart
+from keyboards.keyboards import back_kb, category_kb, main_menu_kb, menu_categories_kb
 from menu_data import MENU
 
 router = Router()
@@ -31,13 +32,15 @@ CONTACTS_TEXT = (
 
 
 @router.message(CommandStart())
-async def cmd_start(message: Message):
+async def cmd_start(message: Message, state: FSMContext):
+    await state.clear()
     await message.answer(WELCOME_TEXT, reply_markup=main_menu_kb())
 
 
 @router.callback_query(F.data == "back_to_main")
 async def back_to_main(callback: CallbackQuery, state: FSMContext):
-    await state.clear()
+    # Leave any checkout state but keep FSM data (the cart).
+    await state.set_state(None)
     await callback.message.edit_text(WELCOME_TEXT, reply_markup=main_menu_kb())
     await callback.answer()
 
@@ -55,16 +58,17 @@ async def show_contacts(callback: CallbackQuery):
 
 
 @router.callback_query(F.data == "menu")
-async def show_menu(callback: CallbackQuery):
+async def show_menu(callback: CallbackQuery, state: FSMContext):
+    cart = await get_cart(state)
     await callback.message.edit_text(
         "🍽 <b>Меню Bella Vista</b>\n\nВыберите категорию:",
-        reply_markup=menu_categories_kb(),
+        reply_markup=menu_categories_kb(cart_count(cart)),
     )
     await callback.answer()
 
 
 @router.callback_query(F.data.startswith("category:"))
-async def show_category(callback: CallbackQuery):
+async def show_category(callback: CallbackQuery, state: FSMContext):
     key = callback.data.split(":", 1)[1]
     category = MENU.get(key)
     if not category:
@@ -74,6 +78,8 @@ async def show_category(callback: CallbackQuery):
     text = f"<b>{category['title']}</b>\n\n"
     for name, price in category["items"]:
         text += f"• {name} — {price}\n"
+    text += "\nНажмите ➕, чтобы добавить блюдо в корзину:"
 
-    await callback.message.edit_text(text, reply_markup=back_kb("menu"))
+    cart = await get_cart(state)
+    await callback.message.edit_text(text, reply_markup=category_kb(key, cart_count(cart)))
     await callback.answer()
