@@ -1,9 +1,10 @@
 from aiogram import F, Router
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
 
 from cart import cart_count, get_cart
+from handlers.order import OrderStates, remove_prompt_kb
 from keyboards.keyboards import back_kb, category_kb, main_menu_kb, menu_categories_kb
 from menu_data import MENU
 
@@ -33,7 +34,12 @@ CONTACTS_TEXT = (
 
 @router.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext):
+    current = await state.get_state()
+    await remove_prompt_kb(message.bot, message.chat.id, state)
     await state.clear()
+    if current == OrderStates.waiting_phone.state:
+        # The phone step left a reply keyboard on screen; take it down.
+        await message.answer("Оформление заказа сброшено.", reply_markup=ReplyKeyboardRemove())
     await message.answer(WELCOME_TEXT, reply_markup=main_menu_kb())
 
 
@@ -41,6 +47,10 @@ async def cmd_start(message: Message, state: FSMContext):
 async def back_to_main(callback: CallbackQuery, state: FSMContext):
     # Leave any checkout state but keep FSM data (the cart).
     await state.set_state(None)
+    if (await state.get_data()).get("prompt_message_id") != callback.message.message_id:
+        await remove_prompt_kb(callback.bot, callback.message.chat.id, state)
+    else:
+        await state.update_data(prompt_message_id=None)
     await callback.message.edit_text(WELCOME_TEXT, reply_markup=main_menu_kb())
     await callback.answer()
 

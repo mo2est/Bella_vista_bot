@@ -41,6 +41,24 @@ class OrderStates(StatesGroup):
     waiting_phone = State()
 
 
+CHECKOUT_STATES = (OrderStates.waiting_name.state, OrderStates.waiting_phone.state)
+
+
+async def remove_prompt_kb(bot, chat_id: int, state: FSMContext):
+    """Strip the inline Cancel keyboard from the last checkout prompt, if any."""
+    data = await state.get_data()
+    prompt_id = data.get("prompt_message_id")
+    if not prompt_id:
+        return
+    await state.update_data(prompt_message_id=None)
+    try:
+        await bot.edit_message_reply_markup(
+            chat_id=chat_id, message_id=prompt_id, reply_markup=None
+        )
+    except TelegramBadRequest:
+        pass
+
+
 async def render_cart(callback: CallbackQuery, state: FSMContext):
     cart = await get_cart(state)
     if not cart:
@@ -125,31 +143,60 @@ async def checkout(callback: CallbackQuery, state: FSMContext):
     if not cart:
         await callback.answer("Корзина пуста", show_alert=True)
         return
+    data = await state.get_data()
+    if data.get("prompt_message_id") not in (None, callback.message.message_id):
+        await remove_prompt_kb(callback.bot, callback.message.chat.id, state)
     await state.set_state(OrderStates.waiting_name)
     await callback.message.edit_text(
         "🛒 <b>Оформление заказа</b>\n\nКак вас зовут?",
         reply_markup=cancel_order_kb(),
     )
+    await state.update_data(prompt_message_id=callback.message.message_id)
     await callback.answer()
 
 
 @router.callback_query(F.data == "order_cancel")
 async def cancel_checkout(callback: CallbackQuery, state: FSMContext):
+    current = await state.get_state()
+    if current not in CHECKOUT_STATES:
+        # Stale Cancel button from an already finished or reset checkout.
+        try:
+            await callback.message.edit_reply_markup(reply_markup=None)
+        except TelegramBadRequest:
+            pass
+        await callback.answer("Эта кнопка уже неактуальна")
+        return
     # Cancel checkout but keep the cart so the user can resume later.
     await state.set_state(None)
-    await callback.message.edit_text(
-        "Оформление отменено. Корзина сохранена 🛒",
-        reply_markup=main_menu_kb(),
-    )
+    data = await state.get_data()
+    if data.get("prompt_message_id") != callback.message.message_id:
+        await remove_prompt_kb(callback.bot, callback.message.chat.id, state)
+    else:
+        await state.update_data(prompt_message_id=None)
+    try:
+        await callback.message.edit_text(
+            "Оформление отменено. Корзина сохранена 🛒",
+            reply_markup=main_menu_kb(),
+        )
+    except TelegramBadRequest:
+        pass
     await callback.answer()
+
+
+async def resend_name_prompt(message: Message, state: FSMContext, text: str):
+    """Re-ask for the name, moving the Cancel button to the newest prompt."""
+    await remove_prompt_kb(message.bot, message.chat.id, state)
+    sent = await message.answer(text, reply_markup=cancel_order_kb())
+    await state.update_data(prompt_message_id=sent.message_id)
 
 
 @router.message(OrderStates.waiting_name, F.text)
 async def process_name(message: Message, state: FSMContext):
     name = message.text.strip()
     if name.startswith("/") or not (2 <= len(name) <= 50) or not any(ch.isalpha() for ch in name):
-        await message.answer("Пожалуйста, введите имя текстом (2–50 символов).")
+        await resend_name_prompt(message, state, "Пожалуйста, введите имя текстом (2–50 символов).")
         return
+    await remove_prompt_kb(message.bot, message.chat.id, state)
     await state.update_data(name=name)
     await state.set_state(OrderStates.waiting_phone)
     await message.answer(
@@ -159,8 +206,8 @@ async def process_name(message: Message, state: FSMContext):
 
 
 @router.message(OrderStates.waiting_name)
-async def process_name_invalid(message: Message):
-    await message.answer("Пожалуйста, введите имя текстом.")
+async def process_name_invalid(message: Message, state: FSMContext):
+    await resend_name_prompt(message, state, "Пожалуйста, введите имя текстом.")
 
 
 @router.message(OrderStates.waiting_phone, F.text == CANCEL_TEXT)
